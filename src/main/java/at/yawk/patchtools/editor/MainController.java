@@ -79,7 +79,7 @@ public class MainController {
             reader.accept(initClass, 0);
         }
 
-        ClassWriter writer = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
+        ClassWriter writer = new ClassWriter(0);
         initClass.accept(writer);
 
         classFile = Optional.of(path);
@@ -128,7 +128,6 @@ public class MainController {
                     } else {
                         indent = prev;
                     }
-                    System.out.println("Indent: '" + indent + "'");
                     patchCode.insertText(patchCode.getCaretPosition(), indent);
                 }
             }
