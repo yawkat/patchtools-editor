@@ -1,0 +1,30 @@
+.root {
+    -fx-background-color: #073642;
+}
+
+.code-area, .text-area, .content, .text {
+    -fx-background-color: #002b36;
+    -fx-fill: #839496;
+    -fx-text-fill: #839496;
+    -fx-font-family: "Source Code Pro" monospace;
+}
+.text-area .content {
+    -fx-fill: #cb4b16;
+}
+.caret {
+    /* will work in a future version: https://github.com/TomasMikula/RichTextFX/commit/b9eea1 */
+    -fx-stroke: #839496;
+}
+.keyword {
+    -fx-fill: #859900;
+}
+.string {
+    -fx-fill: #2aa198;
+}
+
+.lineno {
+    -fx-font-family: monospace;
+    -fx-background-color: #073642;
+    -fx-text-fill: #586e75;
+    -fx-padding: 0 5px;
+}

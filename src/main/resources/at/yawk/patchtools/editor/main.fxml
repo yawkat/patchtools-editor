@@ -1,0 +1,14 @@
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.*?>
+<?import org.fxmisc.richtext.CodeArea?>
+<GridPane fx:controller="at.yawk.patchtools.editor.MainController" xmlns:fx="http://javafx.com/fxml"
+          alignment="center" hgap="10" vgap="10" fx:id="rootPane">
+    <CodeArea fx:id="patchCode" editable="true" GridPane.columnIndex="0" GridPane.rowIndex="0" GridPane.rowSpan="3"
+              GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/>
+    <CodeArea fx:id="byteCode" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="0" GridPane.rowSpan="3"
+              GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/>
+    <CodeArea fx:id="javaCode" editable="false" GridPane.columnIndex="2" GridPane.rowIndex="0" GridPane.rowSpan="2"
+              GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/>
+    <TextArea fx:id="log" editable="false" GridPane.columnIndex="2" GridPane.rowIndex="2" GridPane.rowSpan="1"
+              GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS"/>
+</GridPane>

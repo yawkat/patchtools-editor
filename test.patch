@@ -1,0 +1,15 @@
+.class ~
+  .method ~ (Ljava/lang/String;)V static
+    .any
+    -push-string "Asynchronous "
+    +push-string "Async "
+    .any
+  .end-method
+  
+  .method <clinit> ()V static
+    .any
+    -push-int 1
+    +push-int 100
+    .any
+  .end-method
+.end-class
