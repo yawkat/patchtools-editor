@@ -50,7 +50,8 @@ public class KeywordHighlighter {
             keywords("paren", "[\\(\\)]"),
             keywords("brace", "[\\{\\}]"),
             keywords("bracket", "[\\[\\]]"),
-            keywords("string", "\\\"([^\"]*(\\\\\\\")?)*\\\"", "'(\\\\[\"']|.)'")
+            keywords("string", "\\\"([^\"]*(\\\\\\\")?)*\\\"", "'(\\\\[\"']|.)'"),
+            keywords("comment", "//[^\n]*")
     );
 
     private final List<Keyword> keywords;
