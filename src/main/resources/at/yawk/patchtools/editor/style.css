@@ -21,6 +21,9 @@
 .string {
     -fx-fill: #2aa198;
 }
+.comment {
+    -fx-fill: #586e75;
+}
 
 .lineno {
     -fx-font-family: monospace;

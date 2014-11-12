@@ -9,6 +9,8 @@ import com.strobel.decompiler.DecompilerSettings;
 import com.strobel.decompiler.PlainTextOutput;
 import com.strobel.decompiler.languages.java.ast.AstBuilder;
 import java.io.*;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,6 +41,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.fxmisc.richtext.CodeArea;
 import org.fxmisc.richtext.PlainTextChange;
+import org.fxmisc.richtext.StyledTextArea;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
@@ -84,7 +87,7 @@ public class MainController {
 
         classFile = Optional.of(path);
 
-        applyComputedCode(asyncComputeCode(writer.toByteArray()));
+        applyComputedCode(asyncComputeCode(initClass));
 
         updateTitle();
     }
@@ -140,7 +143,7 @@ public class MainController {
                     Task<ComputedCode> task = new Task<ComputedCode>() {
                         @Override
                         protected ComputedCode call() throws Exception {
-                            byte[] classBytes = getPatched(patchCode.getText());
+                            ClassNode classBytes = getPatched(patchCode.getText());
                             return asyncComputeCode(classBytes);
                         }
                     };
@@ -228,16 +231,31 @@ public class MainController {
 
     private void applyComputedCode(ComputedCode b) {
         setPatchFieldColor(false);
-        javaCode.replaceText(b.javaCode);
-        byteCode.replaceText(b.byteCode);
+        replaceTextNoScroll(javaCode, b.javaCode);
+        replaceTextNoScroll(byteCode, b.byteCode);
         log.setText("");
     }
 
-    private ComputedCode asyncComputeCode(byte[] classBytes) {
-        ClassReader classReader = new ClassReader(classBytes);
+    private static void replaceTextNoScroll(CodeArea area, String text) {
+        try {
+            Field field1 = StyledTextArea.class.getDeclaredField("content");
+            field1.setAccessible(true);
+            Object doc = field1.get(area);
+            Method method = doc.getClass().getDeclaredMethod("replaceText", int.class, int.class, String.class);
+            method.setAccessible(true);
+            method.invoke(doc, 0, area.getLength(), text);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private ComputedCode asyncComputeCode(ClassNode classBytes) {
         PlainTextOutput byteCodeOutput = new PlainTextOutput();
         byteCodeOutput.setIndentToken("  ");
-        new BytecodeMarkup().write(v -> classReader.accept(v, 0), byteCodeOutput);
+        new BytecodeMarkup().write(classBytes::accept, byteCodeOutput);
+
+        ClassWriter writer = new ClassWriter(0);
+        classBytes.accept(writer);
 
         AstBuilder builder = new AstBuilder(
                 new DecompilerContext(new DecompilerSettings())
@@ -245,7 +263,7 @@ public class MainController {
         TypeDefinition typeDefinition = ClassFileReader.readClass(
                 ClassFileReader.OPTION_PROCESS_ANNOTATIONS | ClassFileReader.OPTION_PROCESS_CODE,
                 IMetadataResolver.EMPTY,
-                new Buffer(classBytes)
+                new Buffer(writer.toByteArray())
         );
         builder.addType(typeDefinition);
         PlainTextOutput output = new PlainTextOutput();
@@ -262,7 +280,7 @@ public class MainController {
         }
     }
 
-    private byte[] getPatched(String patch) {
+    private ClassNode getPatched(String patch) {
         // clone class node
         ClassNode node = new ClassNode(Opcodes.ASM5);
         initClass.accept(node);
@@ -275,7 +293,7 @@ public class MainController {
         Patcher patcher = new Patcher(classSet);
         patcher.apply(new StringReader(patch));
 
-        return classSet.getClass(node.name);
+        return classSet.getClassWrapper(node.name).getNode();
     }
 
     private void updateTitle() {
