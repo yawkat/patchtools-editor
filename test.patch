@@ -1,15 +1,52 @@
-.class ~
-  .method ~ (Ljava/lang/String;)V static
-    .any
-    -push-string "Asynchronous "
-    +push-string "Async "
-    .any
-  .end-method
+#exclude *
+#include net.minecraft.*
+
+public class ~AABB {
+  add public static java.util.Map instances;
+  add public static boolean debug;
   
-  .method <clinit> ()V static
+  public static ~AABB ~create(double x1,
+                              double y1,
+                              double z1,
+                              double x2,
+                              double y2,
+                              double z2) {
     .any
-    -push-int 1
-    +push-int 100
+  }
+  
+  protected void ~init(double x1,
+                        double y1,
+                        double z1,
+                        double x2,
+                        double y2,
+                        double z2) {
     .any
-  .end-method
-.end-class
+    .load-double 11
+    .any
+    .label *
+    +get-static ~AABB debug Z
+    +if-zero ~X
+    +load-object 0
+    +new java/lang/Throwable
+    +dup
+    +invoke-special java/lang/Throwable <init> ()V
+    +put-field ~AABB stack Ljava/lang/Throwable;
+    +get-static ~AABB instances Ljava/util/Map;
+    +load-object 0
+    +get-static java/lang/Boolean TRUE Ljava/lang/Boolean;
+    +invoke-interface java/util/Map put (Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+    +return
+    +label ~X
+    .return
+  }
+  
+  add public static void clinit() {
+    +new com/google/common/collect/MapMaker
+    +dup
+    +invoke-special com/google/common/collect/MapMaker <init> ()V
+    +invoke-virtual com/google/common/collect/MapMaker weakKeys ()Lcom/google/common/collect/MapMaker;
+    +invoke-virtual com/google/common/collect/MapMaker makeMap ()Ljava/util/concurrent/ConcurrentMap;
+    +put-static ~AABB instances Ljava/util/Map;
+    +return
+  }
+}

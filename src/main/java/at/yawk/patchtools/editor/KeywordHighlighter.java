@@ -42,8 +42,30 @@ public class KeywordHighlighter {
             keywords(
                     "keyword",
 
+                    "abstract ", "class ", "void ", "double ", "float ", "int ", "interface ", "long ", "native ",
+                    "private ", "protected ", "public ", "short ", "static ", "synchronized ", "throws ", "boolean "
+            ),
+            keywords(
+                    "find",
+
                     Arrays.stream(Instruction.values())
-                            .map(i -> "[.+-]" + i.toString().toLowerCase().replace("_", "[-_]"))
+                            .map(i -> "\\." + i.toString().toLowerCase().replace("_", "[-_]"))
+                            .toArray(String[]::new)
+            ),
+            keywords("add", "add"),
+            keywords(
+                    "add",
+
+                    Arrays.stream(Instruction.values())
+                            .map(i -> "\\+" + i.toString().toLowerCase().replace("_", "[-_]"))
+                            .toArray(String[]::new)
+            ),
+            keywords("remove", "remove"),
+            keywords(
+                    "remove",
+
+                    Arrays.stream(Instruction.values())
+                            .map(i -> "-" + i.toString().toLowerCase().replace("_", "[-_]"))
                             .toArray(String[]::new)
             ),
             keywords("semicolon", ";"),
@@ -51,7 +73,10 @@ public class KeywordHighlighter {
             keywords("brace", "[\\{\\}]"),
             keywords("bracket", "[\\[\\]]"),
             keywords("string", "\\\"([^\"]*(\\\\\\\")?)*\\\"", "'(\\\\[\"']|.)'"),
-            keywords("comment", "//[^\n]*")
+            keywords("comment", "//[^\n]*", "\\#[^\n]*", "/\\*(\\*?[^/*]/?)*\\*/"),
+            // patchtools-cli actions
+            keywords("action", "\\#(include|exclude) [^\n]+", "//(include|exclude) [^\n]+"),
+            keywords("match", "\\~")
     );
 
     private final List<Keyword> keywords;

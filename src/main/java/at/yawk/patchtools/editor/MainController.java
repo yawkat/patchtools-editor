@@ -48,6 +48,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.reactfx.EventStream;
 import uk.co.thinkofdeath.patchtools.Patcher;
+import uk.co.thinkofdeath.patchtools.lexer.LexerException;
 import uk.co.thinkofdeath.patchtools.logging.LoggableException;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassPathWrapper;
 import uk.co.thinkofdeath.patchtools.wrappers.ClassSet;

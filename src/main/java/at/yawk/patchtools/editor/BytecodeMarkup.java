@@ -1,18 +1,42 @@
 package at.yawk.patchtools.editor;
 
+import com.google.common.collect.ImmutableMap;
 import com.strobel.decompiler.ITextOutput;
+import java.util.Arrays;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.function.Consumer;
 import org.objectweb.asm.*;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 import org.objectweb.asm.util.Printer;
 import uk.co.thinkofdeath.patchtools.instruction.Instruction;
+import uk.co.thinkofdeath.patchtools.instruction.Instructions;
 
 /**
  * @author yawkat
  */
 public class BytecodeMarkup {
+    private static final Map<Integer, String> ACCESS =
+            ImmutableMap.<Integer, String>builder()
+                    .put(Opcodes.ACC_PRIVATE, "private")
+                    .put(Opcodes.ACC_PUBLIC, "public")
+                    .put(Opcodes.ACC_PROTECTED, "protected")
+                    .put(Opcodes.ACC_STATIC, "static")
+                    .put(Opcodes.ACC_SYNCHRONIZED, "synchronized")
+                    .put(Opcodes.ACC_FINAL, "final")
+                    .build();
+
+    private static void writeModifiers(ITextOutput ito, int modifiers, int... exclude) {
+        Arrays.sort(exclude);
+        ACCESS.forEach((k, v) -> {
+            if (Arrays.binarySearch(exclude, k) == -1 && (modifiers & k) != 0) {
+                ito.write(v);
+                ito.write(' ');
+            }
+        });
+    }
+
     public void write(Consumer<ClassVisitor> node, ITextOutput output) {
         node.accept(new PrintingClassVisitor(output));
     }
@@ -30,27 +54,38 @@ public class BytecodeMarkup {
         public void visit(
                 int version, int access, String name, String signature, String superName, String[] interfaces) {
             super.visit(version, access, name, signature, superName, interfaces);
-            output.writeLine(".class %s", name);
-            output.indent();
+            writeModifiers(output, access, Opcodes.ACC_SYNCHRONIZED);
+            output.write("class ");
+            output.write(name);
             if (superName != null && !superName.equals(Type.getType(Object.class).getInternalName())) {
-                output.writeLine(".super %s", superName);
+                output.write(" extends %s", superName);
             }
-            for (String interfac : interfaces) {
-                output.writeLine(".interface %s", interfac);
+            for (int i = 0; i < interfaces.length; i++) {
+                if (i == 0) {
+                    output.write(" implements");
+                } else {
+                    output.write(", ");
+                }
+                output.write(" %s", interfaces[i]);
             }
+            output.write(" {");
+            output.writeLine();
+            output.indent();
         }
 
         @Override
         public FieldVisitor visitField(int access, String name, String desc, String signature, Object value) {
             visitMember();
-            output.write(".field %s %s", name, desc);
-            if ((access & Opcodes.ACC_STATIC) != 0) { output.write(" static"); }
-            if ((access & Opcodes.ACC_PRIVATE) != 0) { output.write(" private"); }
+            writeModifiers(output, access);
+            output.write(Type.getType(desc).getClassName());
+            output.write(' ');
+            output.write(name);
             if (value instanceof String) {
-                output.write(" \"" + value + "\"");
+                output.write(" = \"" + ((String) value).replace("\"", "\\\"") + "\"");
             } else if (value != null) {
-                output.write(' ' + String.valueOf(value));
+                output.write(" = " + value);
             }
+            output.write(';');
             output.writeLine();
             return super.visitField(access, name, desc, signature, value);
         }
@@ -66,10 +101,20 @@ public class BytecodeMarkup {
         @Override
         public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
             visitMember();
-            output.write(".method %s %s", name, desc);
-            if ((access & Opcodes.ACC_STATIC) != 0) { output.write(" static"); }
-            if ((access & Opcodes.ACC_PROTECTED) != 0) { output.write(" protected"); }
-            if ((access & Opcodes.ACC_PRIVATE) != 0) { output.write(" private"); }
+
+            writeModifiers(output, access);
+            output.write(Type.getReturnType(desc).getClassName());
+            output.write(' ');
+            output.write(name);
+            output.write('(');
+            Type[] argumentTypes = Type.getArgumentTypes(desc);
+            for (int i = 0; i < argumentTypes.length; i++) {
+                if (i > 0) { output.write(", "); }
+                output.write(argumentTypes[i].getClassName());
+                output.write(' ');
+                output.write((char) ('a' + i)); // lets hope nobody uses > 26 args
+            }
+            output.write(") {");
             output.writeLine();
             output.indent();
             return new PrintingMethodVisitor2(new MethodNode(Opcodes.ASM5, access, name, desc, signature, exceptions));
@@ -78,7 +123,7 @@ public class BytecodeMarkup {
         @Override
         public void visitEnd() {
             output.unindent();
-            output.writeLine(".end-class");
+            output.writeLine("}");
         }
 
         private class PrintingMethodVisitor2 extends MethodVisitor {
@@ -97,7 +142,7 @@ public class BytecodeMarkup {
                 while (iterator.hasNext()) {
                     AbstractInsnNode node = iterator.next();
                     StringBuilder builder = new StringBuilder(".");
-                    boolean printed = Instruction.print(builder, method, node);
+                    boolean printed = Instructions.print(builder, method, node);
                     if (!printed) {
                         int opcode = node.getOpcode() & 0xff;
                         if (opcode > Printer.OPCODES.length) { continue; }
@@ -106,7 +151,7 @@ public class BytecodeMarkup {
                     output.writeLine(builder.toString().replace("\n", "\\n"));
                 }
                 output.unindent();
-                output.writeLine(".end-method");
+                output.writeLine("}");
             }
         }
     }

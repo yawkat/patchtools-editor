@@ -16,13 +16,28 @@
     -fx-stroke: #839496;
 }
 .keyword {
-    -fx-fill: #859900;
+    -fx-fill: #b58900;
 }
 .string {
     -fx-fill: #2aa198;
 }
 .comment {
     -fx-fill: #586e75;
+}
+.action {
+    -fx-fill: #d33682;
+}
+.find {
+    -fx-fill: #268bd2;
+}
+.add {
+    -fx-fill: #859900;
+}
+.remove {
+    -fx-fill: #dc322f;
+}
+.match {
+    -fx-fill: #2aa198;
 }
 
 .lineno {
